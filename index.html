@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snowball Roller</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f7ff; /* soft pastel sky */
+      color: #444;
+      user-select: none;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 30px;
+      letter-spacing: 0.03em;
+    }
+
+    .score {
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    .score span {
+      font-weight: 700;
+      font-size: 26px;
+    }
+
+    .game-area {
+      position: relative;
+      width: min(500px, 95vw);
+      height: min(500px, 95vw);
+      border-radius: 26px;
+      background: url("img/background.png") center/cover no-repeat;
+      box-shadow: 0 12px 30px rgba(0, 0, 256, 0.3);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 52px;
+    }
+
+    .character-wrapper {
+      position: relative;
+      width: 82%;
+      max-width: 360px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .character-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.15s ease;
+    }
+
+    .game-area.holding .character-wrapper img {
+      transform: translateY(6px) scale(1.03);
+    }
+
+    .ground {
+      position: absolute;
+      bottom: 26px;
+      left: 30px;
+      right: 30px;
+      height: 8px;
+      background: #e8f4ff;
+      border-radius: 999px;
+    }
+
+    .hold-area {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hint {
+      margin-top: 14px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* floating +0.1 */
+    .floating-plus {
+      position: absolute;
+      font-size: 15px;
+      font-weight: 500;
+      color: #ff7aa2;
+      animation: floatUp 0.8s ease-out forwards;
+      pointer-events: none;
+      text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+      }
+      20% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Snowball Roller</h1>
+
+  <div class="score">
+    Time rolled: <span id="score">0</span> s
+  </div>
+
+  <div class="game-area" id="gameArea">
+    <div class="character-wrapper" id="charWrapper">
+      <!-- idle image (standing with snowball) -->
+      <img id="charImg" src="img/snow_idle.png" alt="Snowball boy" />
+    </div>
+    <div class="ground"></div>
+    <!-- hold area -->
+    <div class="hold-area" id="holdArea"></div>
+  </div>
+
+  <div class="hint">Hold to roll ⛄</div>
+
+  <script>
+    const scoreEl = document.getElementById("score");
+    const gameArea = document.getElementById("gameArea");
+    const holdArea = document.getElementById("holdArea");
+    const charImg = document.getElementById("charImg");
+    const charWrapper = document.getElementById("charWrapper");
+
+    const STORAGE_KEY = "snowball_hold_score";
+    const idleSrc = "img/snow_idle.png";
+    const rollSrc = "img/snow_roll.png";
+
+    // load saved score
+    let score = parseFloat(localStorage.getItem(STORAGE_KEY) || "0", 10);
+    scoreEl.textContent = score.toLocaleString();
+
+    let holding = false;
+    let intervalId = null;
+
+    function updateScore() {
+      score += 0.1;
+      scoreEl.textContent = score.toLocaleString();
+      localStorage.setItem(STORAGE_KEY, String(score));
+      spawnPlusOne();
+    }
+
+    function spawnPlusOne() {
+      const plus = document.createElement("div");
+      plus.className = "floating-plus";
+      plus.textContent = "+0.1s";
+
+      const rect = charWrapper.getBoundingClientRect();
+      const gameRect = gameArea.getBoundingClientRect();
+
+      const x = rect.left + rect.width * (0.73 + Math.random() * 0.1) - gameRect.left;
+      const y = rect.top + rect.height * (0.48 + Math.random() * 0.1) - gameRect.top;
+
+      plus.style.left = x + "px";
+      plus.style.top = y + "px";
+
+      gameArea.appendChild(plus);
+      setTimeout(() => plus.remove(), 500);
+    }
+
+    function startHolding() {
+      if (holding) return;
+      holding = true;
+      gameArea.classList.add("holding");
+      charImg.src = rollSrc;
+      intervalId = setInterval(updateScore, 100);
+    }
+
+    function stopHolding() {
+      if (!holding) return;
+      holding = false;
+      gameArea.classList.remove("holding");
+      charImg.src = idleSrc;
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    // mouse
+    holdArea.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      startHolding();
+    });
+
+    document.addEventListener("mouseup", () => {
+      stopHolding();
+    });
+
+    // touch
+    holdArea.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      startHolding();
+    }, { passive: false });
+
+    holdArea.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      stopHolding();
+    }, { passive: false });
+
+    holdArea.addEventListener("touchcancel", (e) => {
+      e.preventDefault();
+      stopHolding();
+    }, { passive: false });
+  </script>
+</body>
+</html>
+
