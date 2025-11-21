@@ -41,7 +41,7 @@
       height: min(500px, 95vw);
       border-radius: 26px;
       background: url("img/background.png") center/cover no-repeat;
-      box-shadow: 0 12px 30px rgba(0, 0, 256, 0.3);
+      box-shadow: 0 12px 30px rgba(0, 0, 255, 0.3);
       overflow: hidden;
       display: flex;
       justify-content: center;
@@ -103,6 +103,155 @@
       text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
     }
 
+    /* Leaderboard bottom bar */
+    .leaderboard-bar {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      width: min(520px, 96vw);
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 999px;
+      padding: 10px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+
+    .leaderboard-left,
+    .leaderboard-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .lb-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #7b8ba5;
+    }
+
+    .lb-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .lb-flag {
+      font-size: 20px;
+    }
+
+    .lb-country {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .lb-score {
+      font-size: 14px;
+      font-weight: 700;
+      color: #4a6fff;
+    }
+
+    /* Modal backdrop */
+    .leaderboard-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: none; /* JS로 토글 */
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    /* Modal box */
+    .leaderboard-modal {
+      width: min(480px, 94vw);
+      max-height: 80vh;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 18px 20px 20px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lb-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .lb-modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .lb-close-btn {
+      border: none;
+      background: #f1f3ff;
+      border-radius: 999px;
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .lb-modal-subtitle {
+      margin-top: 4px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #7b8ba5;
+    }
+
+    /* Table */
+    .lb-table-wrapper {
+      overflow-y: auto;
+      border-radius: 16px;
+      border: 1px solid #e0e5ff;
+    }
+
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .lb-table thead {
+      position: sticky;
+      top: 0;
+      background: #f5f7ff;
+    }
+
+    .lb-table th,
+    .lb-table td {
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    .lb-table th:nth-child(1),
+    .lb-table td:nth-child(1) {
+      width: 40px;
+      text-align: center;
+    }
+
+    .lb-table tbody tr:nth-child(even) {
+      background: #fafbff;
+    }
+
+    /* 내 나라 강조 */
+    .lb-row-me {
+      background: #e8f1ff !important;
+      font-weight: 600;
+    }
+
     @keyframes floatUp {
       0% {
         opacity: 0;
@@ -138,7 +287,7 @@
 
   <div class="hint">Hold to roll ⛄</div>
 
-    <script>
+  <script>
     const scoreEl = document.getElementById("score");
     const gameArea = document.getElementById("gameArea");
     const holdArea = document.getElementById("holdArea");
@@ -198,11 +347,6 @@
         clearInterval(intervalId);
         intervalId = null;
       }
-
-      // ✅ 손 뗀 시점의 점수를 전세계 리더보드에 자동 전송
-      if (typeof autoSubmitScoreFromGame === "function") {
-        autoSubmitScoreFromGame(score);
-      }
     }
 
     // mouse
@@ -231,159 +375,173 @@
       stopHolding();
     }, { passive: false });
   </script>
-  <!-- 👇 여기부터 리더보드 영역 (index.html 안에, </body> 위쪽에 추가) -->
-<section id="leaderboard-section" style="max-width:600px; margin:40px auto; color:#fff; text-align:center;">
-  <h2>🌍 Global Leaderboard</h2>
 
-  <!-- 국가 선택 -->
-  <div style="margin:10px 0;">
-    <label for="country-filter">Country: </label>
-    <select id="country-filter">
-      <option value="">All</option>
-      <option value="KR">KR</option>
-      <option value="US">US</option>
-      <option value="JP">JP</option>
-      <option value="EU">EU</option>
-      <!-- 필요하면 나라 더 추가 -->
-    </select>
-    <button id="reload-board">Reload</button>
+  <!-- Leaderboard Bar -->
+  <div class="leaderboard-bar" id="leaderboard-bar">
+    <div class="leaderboard-left">
+      <div class="lb-label">Top Country</div>
+      <div class="lb-main">
+        <span class="lb-flag" id="lb-top-flag">🌎</span>
+        <span class="lb-country" id="lb-top-country">Loading...</span>
+        <span class="lb-score" id="lb-top-score">0</span>
+      </div>
+    </div>
+
+    <div class="leaderboard-right">
+      <div class="lb-label">Your Country</div>
+      <div class="lb-main">
+        <span class="lb-flag" id="lb-me-flag">❓</span>
+        <span class="lb-country" id="lb-me-country">Detecting...</span>
+        <span class="lb-score" id="lb-me-score">0</span>
+      </div>
+    </div>
   </div>
 
-  <!-- 리더보드 테이블 -->
-  <table style="width:100%; border-collapse:collapse; margin-top:10px; background:rgba(0,0,0,0.4);">
-    <thead>
-      <tr>
-        <th style="border-bottom:1px solid #555; padding:6px;">#</th>
-        <th style="border-bottom:1px solid #555; padding:6px;">User</th>
-        <th style="border-bottom:1px solid #555; padding:6px;">Country</th>
-        <th style="border-bottom:1px solid #555; padding:6px;">Score</th>
-      </tr>
-    </thead>
-    <tbody id="leaderboard-body">
-      <!-- JS로 동적 채움 -->
-    </tbody>
-  </table>
-
-  <!-- 점수 제출 폼 -->
-  <div style="margin-top:20px;">
-    <h3>Submit Your Score</h3>
-    <input id="username-input" type="text" placeholder="Your name" style="padding:6px; margin:4px;">
-    <input id="country-input" type="text" placeholder="Country (e.g. KR)" style="padding:6px; margin:4px; width:120px;">
-    <input id="score-input" type="number" placeholder="Score" style="padding:6px; margin:4px; width:120px;">
-    <button id="submit-score-btn" style="padding:6px 12px; margin:4px;">Submit</button>
-    <div id="submit-status" style="margin-top:6px; font-size:0.9em;"></div>
+  <!-- Leaderboard Modal -->
+  <div class="leaderboard-modal-backdrop" id="leaderboard-modal-backdrop">
+    <div class="leaderboard-modal">
+      <div class="lb-modal-header">
+        <h2>Global Leaderboard</h2>
+        <button class="lb-close-btn" id="lb-close-btn">✕</button>
+      </div>
+      <div class="lb-modal-subtitle">
+        Total score by country (auto-detected by IP)
+      </div>
+      <div class="lb-table-wrapper">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Country</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="lb-table-body">
+            <!-- rows will be injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-</section>
-<!-- 👆 여기까지 리더보드 UI -->
-<script>
-  // 👇 네 Worker API 주소로 바꿔줘
-  const API_BASE = "https://snowleaderboardapi.kmg24499523.workers.dev";
 
-  async function loadLeaderboard(country = "") {
-    try {
-      const params = country ? `?country=${encodeURIComponent(country)}` : "";
-      const res = await fetch(`${API_BASE}/leaderboard${params}`, {
-        method: "GET"
-      });
-      const data = await res.json();
+  <!-- Leaderboard JS -->
+  <script>
+    // 나라코드 → 이모지 간단 매핑(없으면 지구본)
+    const COUNTRY_FLAG_MAP = {
+      "KR": "🇰🇷",
+      "US": "🇺🇸",
+      "JP": "🇯🇵",
+      "CN": "🇨🇳",
+      "GB": "🇬🇧",
+      "FR": "🇫🇷",
+      "DE": "🇩🇪",
+      "AU": "🇦🇺",
+      "CA": "🇨🇦"
+      // 필요하면 추가
+    };
 
-      const tbody = document.getElementById("leaderboard-body");
-      tbody.innerHTML = "";
+    const bar = document.getElementById("leaderboard-bar");
+    const modalBackdrop = document.getElementById("leaderboard-modal-backdrop");
+    const closeBtn = document.getElementById("lb-close-btn");
+    const tableBody = document.getElementById("lb-table-body");
 
-      const rows = data.results || data; // Worker 응답형식 대응
-      rows.forEach((row, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td style="padding:4px; border-bottom:1px solid #333;">${index + 1}</td>
-          <td style="padding:4px; border-bottom:1px solid #333;">${row.username}</td>
-          <td style="padding:4px; border-bottom:1px solid #333;">${row.country}</td>
-          <td style="padding:4px; border-bottom:1px solid #333;">${row.score}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+    const topFlagEl = document.getElementById("lb-top-flag");
+    const topCountryEl = document.getElementById("lb-top-country");
+    const topScoreEl = document.getElementById("lb-top-score");
 
-    } catch (e) {
-      console.error(e);
-      document.getElementById("leaderboard-body").innerHTML = `
-        <tr><td colspan="4" style="padding:8px;">Failed to load leaderboard</td></tr>
-      `;
-    }
-  }
+    const meFlagEl = document.getElementById("lb-me-flag");
+    const meCountryEl = document.getElementById("lb-me-country");
+    const meScoreEl = document.getElementById("lb-me-score");
 
-  async function submitScore(username, country, score) {
-    const statusEl = document.getElementById("submit-status");
-    try {
-      const res = await fetch(`${API_BASE}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, country, score: Number(score) })
-      });
+    let myCountryCode = null;
 
-      if (!res.ok) {
-        statusEl.textContent = "Submit failed.";
-        return;
-      }
-      statusEl.textContent = "Score submitted!";
-      // 점수 보낸 뒤 리더보드 다시 로드
-      const currentCountry = document.getElementById("country-filter").value;
-      loadLeaderboard(currentCountry);
-    } catch (e) {
-      console.error(e);
-      statusEl.textContent = "Error submitting score.";
-    }
-  }
-
-  // 페이지가 로드되면 기본(전세계) 리더보드 로드
-  window.addEventListener("load", () => {
-    loadLeaderboard();
-
-    const countryFilter = document.getElementById("country-filter");
-    const reloadBtn = document.getElementById("reload-board");
-    const submitBtn = document.getElementById("submit-score-btn");
-
-    if (reloadBtn) {
-      reloadBtn.addEventListener("click", () => {
-        loadLeaderboard(countryFilter.value);
-      });
+    function formatScore(num) {
+      if (num === null || num === undefined) return "0";
+      // 1234567 -> "1,234,567" 형식
+      return num.toLocaleString();
     }
 
-    if (submitBtn) {
-      submitBtn.addEventListener("click", () => {
-        const username = document.getElementById("username-input").value.trim();
-        const country = document.getElementById("country-input").value.trim().toUpperCase();
-        const score = document.getElementById("score-input").value;
+    function flagForCountry(code) {
+      if (!code) return "🌎";
+      return COUNTRY_FLAG_MAP[code.toUpperCase()] || "🌎";
+    }
 
-        if (!username || !country || !score) {
-          document.getElementById("submit-status").textContent = "Fill all fields.";
-          return;
+    async function fetchSummary() {
+      try {
+        const res = await fetch("/api/leaderboard/summary");
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const top = data.topCountry;
+        const me = data.me;
+
+        if (top) {
+          topFlagEl.textContent = flagForCountry(top.code);
+          topCountryEl.textContent = top.name;
+          topScoreEl.textContent = formatScore(top.score);
         }
-        submitScore(username, country, score);
-      });
-    }
-  });
 
-  // ✅ 게임에서 자동으로 불러쓰는 함수
-  function autoSubmitScoreFromGame(finalScore) {
-    const usernameEl = document.getElementById("username-input");
-    const countryEl = document.getElementById("country-input");
-    const statusEl  = document.getElementById("submit-status");
-
-    const username = (usernameEl?.value || "Player").trim();
-    const country  = (countryEl?.value || "WW").trim().toUpperCase();
-
-    // 소수점 한 자리로 깔끔하게
-    const roundedScore = Math.round(finalScore * 10) / 10;
-
-    if (!roundedScore || isNaN(roundedScore)) {
-      console.warn("Score is invalid, not submitting.", roundedScore);
-      return;
+        if (me) {
+          myCountryCode = me.countryCode || null;
+          meFlagEl.textContent = flagForCountry(me.countryCode);
+          meCountryEl.textContent = me.countryName || "Unknown";
+          meScoreEl.textContent = formatScore(me.score);
+        }
+      } catch (err) {
+        console.error("Failed to fetch summary", err);
+      }
     }
 
-    statusEl.textContent = "Submitting score...";
+    async function fetchFullLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard/all");
+        if (!res.ok) return;
+        const list = await res.json();
 
-    submitScore(username, country, roundedScore);
-  }
-</script>
+        tableBody.innerHTML = "";
+
+        list.forEach(row => {
+          const tr = document.createElement("tr");
+
+          if (myCountryCode && row.code && row.code.toUpperCase() === myCountryCode.toUpperCase()) {
+            tr.classList.add("lb-row-me");
+          }
+
+          tr.innerHTML = `
+            <td>${row.rank}</td>
+            <td>${flagForCountry(row.code)} ${row.name}</td>
+            <td>${formatScore(row.score)}</td>
+          `;
+          tableBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Failed to fetch full leaderboard", err);
+      }
+    }
+
+    function openLeaderboardModal() {
+      modalBackdrop.style.display = "flex";
+      fetchFullLeaderboard();
+    }
+
+    function closeLeaderboardModal() {
+      modalBackdrop.style.display = "none";
+    }
+
+    // 클릭 이벤트
+    bar.addEventListener("click", openLeaderboardModal);
+    closeBtn.addEventListener("click", closeLeaderboardModal);
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop) {
+        closeLeaderboardModal();
+      }
+    });
+
+    // 초기 로드 시 summary 한 번 호출
+    fetchSummary();
+
+    // 실시간 느낌을 위한 주기적 갱신 (5초마다)
+    setInterval(fetchSummary, 5000);
+  </script>
 </body>
 </html>
-
