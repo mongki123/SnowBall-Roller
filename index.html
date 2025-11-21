@@ -226,6 +226,137 @@
       stopHolding();
     }, { passive: false });
   </script>
+  <!-- 👇 여기부터 리더보드 영역 (index.html 안에, </body> 위쪽에 추가) -->
+<section id="leaderboard-section" style="max-width:600px; margin:40px auto; color:#fff; text-align:center;">
+  <h2>🌍 Global Leaderboard</h2>
+
+  <!-- 국가 선택 -->
+  <div style="margin:10px 0;">
+    <label for="country-filter">Country: </label>
+    <select id="country-filter">
+      <option value="">All</option>
+      <option value="KR">KR</option>
+      <option value="US">US</option>
+      <option value="JP">JP</option>
+      <option value="EU">EU</option>
+      <!-- 필요하면 나라 더 추가 -->
+    </select>
+    <button id="reload-board">Reload</button>
+  </div>
+
+  <!-- 리더보드 테이블 -->
+  <table style="width:100%; border-collapse:collapse; margin-top:10px; background:rgba(0,0,0,0.4);">
+    <thead>
+      <tr>
+        <th style="border-bottom:1px solid #555; padding:6px;">#</th>
+        <th style="border-bottom:1px solid #555; padding:6px;">User</th>
+        <th style="border-bottom:1px solid #555; padding:6px;">Country</th>
+        <th style="border-bottom:1px solid #555; padding:6px;">Score</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboard-body">
+      <!-- JS로 동적 채움 -->
+    </tbody>
+  </table>
+
+  <!-- 점수 제출 폼 -->
+  <div style="margin-top:20px;">
+    <h3>Submit Your Score</h3>
+    <input id="username-input" type="text" placeholder="Your name" style="padding:6px; margin:4px;">
+    <input id="country-input" type="text" placeholder="Country (e.g. KR)" style="padding:6px; margin:4px; width:120px;">
+    <input id="score-input" type="number" placeholder="Score" style="padding:6px; margin:4px; width:120px;">
+    <button id="submit-score-btn" style="padding:6px 12px; margin:4px;">Submit</button>
+    <div id="submit-status" style="margin-top:6px; font-size:0.9em;"></div>
+  </div>
+</section>
+<!-- 👆 여기까지 리더보드 UI -->
+  <script>
+  // 👇 네 Worker API 주소로 바꿔줘
+  const API_BASE = "https://snowleaderboardapi.kmg24499523.workers.dev";
+
+  async function loadLeaderboard(country = "") {
+    try {
+      const params = country ? `?country=${encodeURIComponent(country)}` : "";
+      const res = await fetch(`${API_BASE}/leaderboard${params}`, {
+        method: "GET"
+      });
+      const data = await res.json();
+
+      const tbody = document.getElementById("leaderboard-body");
+      tbody.innerHTML = "";
+
+      const rows = data.results || data; // Worker 응답형식 대응
+      rows.forEach((row, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="padding:4px; border-bottom:1px solid #333;">${index + 1}</td>
+          <td style="padding:4px; border-bottom:1px solid #333;">${row.username}</td>
+          <td style="padding:4px; border-bottom:1px solid #333;">${row.country}</td>
+          <td style="padding:4px; border-bottom:1px solid #333;">${row.score}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+    } catch (e) {
+      console.error(e);
+      document.getElementById("leaderboard-body").innerHTML = `
+        <tr><td colspan="4" style="padding:8px;">Failed to load leaderboard</td></tr>
+      `;
+    }
+  }
+
+  async function submitScore(username, country, score) {
+    const statusEl = document.getElementById("submit-status");
+    try {
+      const res = await fetch(`${API_BASE}/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, country, score: Number(score) })
+      });
+
+      if (!res.ok) {
+        statusEl.textContent = "Submit failed.";
+        return;
+      }
+      statusEl.textContent = "Score submitted!";
+      // 점수 보낸 뒤 리더보드 다시 로드
+      const currentCountry = document.getElementById("country-filter").value;
+      loadLeaderboard(currentCountry);
+    } catch (e) {
+      console.error(e);
+      statusEl.textContent = "Error submitting score.";
+    }
+  }
+
+  // 페이지가 로드되면 기본(전세계) 리더보드 로드
+  window.addEventListener("load", () => {
+    loadLeaderboard();
+
+    const countryFilter = document.getElementById("country-filter");
+    const reloadBtn = document.getElementById("reload-board");
+    const submitBtn = document.getElementById("submit-score-btn");
+
+    if (reloadBtn) {
+      reloadBtn.addEventListener("click", () => {
+        loadLeaderboard(countryFilter.value);
+      });
+    }
+
+    if (submitBtn) {
+      submitBtn.addEventListener("click", () => {
+        const username = document.getElementById("username-input").value.trim();
+        const country = document.getElementById("country-input").value.trim().toUpperCase();
+        const score = document.getElementById("score-input").value;
+
+        if (!username || !country || !score) {
+          document.getElementById("submit-status").textContent = "Fill all fields.";
+          return;
+        }
+        submitScore(username, country, score);
+      });
+    }
+  });
+</script>
 </body>
 </html>
 
