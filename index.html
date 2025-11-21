@@ -293,10 +293,12 @@
     const holdArea = document.getElementById("holdArea");
     const charImg = document.getElementById("charImg");
     const charWrapper = document.getElementById("charWrapper");
-
+  
     const STORAGE_KEY = "snowball_hold_score";
     const idleSrc = "img/snow_idle.png";
     const rollSrc = "img/snow_roll.png";
+
+    
 
     // load saved score
     let score = parseFloat(localStorage.getItem(STORAGE_KEY) || "0", 10);
@@ -304,6 +306,20 @@
 
     let holding = false;
     let intervalId = null;
+
+    let lastSubmittedScore = score;  // 처음에는 현재 저장된 누적값 기준
+
+    async function submitScoreDelta(delta) {
+      try {
+        await fetch(`${API_BASE}/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ score: delta })
+        });
+      } catch (e) {
+        console.error("submit failed", e);
+      }
+    }
 
     function updateScore() {
       score += 0.1;
@@ -330,13 +346,24 @@
       setTimeout(() => plus.remove(), 500);
     }
 
-    function startHolding() {
-      if (holding) return;
-      holding = true;
-      gameArea.classList.add("holding");
-      charImg.src = rollSrc;
-      intervalId = setInterval(updateScore, 100);
+    function stopHolding() {
+      if (!holding) return;
+      holding = false;
+      gameArea.classList.remove("holding");
+      charImg.src = idleSrc;
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    
+      // 👉 이번에 추가로 굴린 시간만 서버에 반영
+      const delta = score - lastSubmittedScore;
+      if (delta > 0.0001) { // 노이즈 방지용 작은 조건
+        submitScoreDelta(delta);
+        lastSubmittedScore = score;
+      }
     }
+
 
     function stopHolding() {
       if (!holding) return;
@@ -453,6 +480,8 @@
     const meCountryEl = document.getElementById("lb-me-country");
     const meScoreEl = document.getElementById("lb-me-score");
 
+    const API_BASE = "https://snowleaderboardapi.kmg24499523.workers.dev";
+    
     let myCountryCode = null;
 
     function formatScore(num) {
@@ -468,7 +497,7 @@
 
     async function fetchSummary() {
       try {
-        const res = await fetch("/api/leaderboard/summary");
+        const res = await fetch(`${API_BASE}/api/leaderboard/summary`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -494,7 +523,7 @@
 
     async function fetchFullLeaderboard() {
       try {
-        const res = await fetch("/api/leaderboard/all");
+        const res = await fetch(`${API_BASE}/api/leaderboard/all`);
         if (!res.ok) return;
         const list = await res.json();
 
