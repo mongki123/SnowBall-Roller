@@ -14,7 +14,7 @@
       justify-content: center;
       align-items: center;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f4f7ff; /* soft pastel sky */
+      background: #f4f7ff;
       color: #444;
       user-select: none;
     }
@@ -100,7 +100,7 @@
       color: #ff7aa2;
       animation: floatUp 0.8s ease-out forwards;
       pointer-events: none;
-      text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 2px 2px rgba(0,0,0,0.3);
     }
 
     /* Leaderboard bottom bar */
@@ -117,7 +117,6 @@
       border-radius: 999px;
       padding: 10px 16px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       cursor: pointer;
       backdrop-filter: blur(12px);
       z-index: 50;
@@ -164,8 +163,8 @@
     .leaderboard-modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      display: none; /* JS로 토글 */
+      background: rgba(0,0,0,0.35);
+      display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
@@ -178,15 +177,15 @@
       background: #ffffff;
       border-radius: 24px;
       padding: 18px 20px 20px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.25);
       display: flex;
       flex-direction: column;
     }
 
     .lb-modal-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
 
     .lb-modal-header h2 {
@@ -211,7 +210,6 @@
       color: #7b8ba5;
     }
 
-    /* Table */
     .lb-table-wrapper {
       overflow-y: auto;
       border-radius: 16px;
@@ -224,50 +222,29 @@
       font-size: 13px;
     }
 
-    .lb-table thead {
-      position: sticky;
-      top: 0;
-      background: #f5f7ff;
-    }
-
     .lb-table th,
     .lb-table td {
       padding: 8px 10px;
       text-align: left;
     }
 
-    .lb-table th:nth-child(1),
-    .lb-table td:nth-child(1) {
-      width: 40px;
-      text-align: center;
-    }
-
     .lb-table tbody tr:nth-child(even) {
       background: #fafbff;
     }
 
-    /* 내 나라 강조 */
     .lb-row-me {
       background: #e8f1ff !important;
       font-weight: 600;
     }
 
     @keyframes floatUp {
-      0% {
-        opacity: 0;
-        transform: translateY(10px) scale(0.9);
-      }
-      20% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-30px) scale(1);
-      }
+      0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+      20% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-30px) scale(1); }
     }
   </style>
 </head>
+
 <body>
   <h1>Snowball Roller</h1>
 
@@ -277,37 +254,34 @@
 
   <div class="game-area" id="gameArea">
     <div class="character-wrapper" id="charWrapper">
-      <!-- idle image (standing with snowball) -->
       <img id="charImg" src="img/snow_idle.png" alt="Snowball boy" />
     </div>
     <div class="ground"></div>
-    <!-- hold area -->
     <div class="hold-area" id="holdArea"></div>
   </div>
 
   <div class="hint">Hold to roll ⛄</div>
 
+  <!-- GAME SCRIPT -->
   <script>
+    const API_BASE = "https://snowleaderboardapi.kmg24499523.workers.dev";
+
     const scoreEl = document.getElementById("score");
     const gameArea = document.getElementById("gameArea");
     const holdArea = document.getElementById("holdArea");
     const charImg = document.getElementById("charImg");
     const charWrapper = document.getElementById("charWrapper");
-  
+
     const STORAGE_KEY = "snowball_hold_score";
     const idleSrc = "img/snow_idle.png";
     const rollSrc = "img/snow_roll.png";
 
-    
-
-    // load saved score
     let score = parseFloat(localStorage.getItem(STORAGE_KEY) || "0", 10);
     scoreEl.textContent = score.toLocaleString();
 
     let holding = false;
     let intervalId = null;
-
-    let lastSubmittedScore = score;  // 처음에는 현재 저장된 누적값 기준
+    let lastSubmittedScore = score;
 
     async function submitScoreDelta(delta) {
       try {
@@ -335,15 +309,22 @@
 
       const rect = charWrapper.getBoundingClientRect();
       const gameRect = gameArea.getBoundingClientRect();
-
       const x = rect.left + rect.width * (0.73 + Math.random() * 0.1) - gameRect.left;
       const y = rect.top + rect.height * (0.48 + Math.random() * 0.1) - gameRect.top;
 
       plus.style.left = x + "px";
       plus.style.top = y + "px";
-
       gameArea.appendChild(plus);
+
       setTimeout(() => plus.remove(), 500);
+    }
+
+    function startHolding() {
+      if (holding) return;
+      holding = true;
+      gameArea.classList.add("holding");
+      charImg.src = rollSrc;
+      intervalId = setInterval(updateScore, 100);
     }
 
     function stopHolding() {
@@ -351,59 +332,28 @@
       holding = false;
       gameArea.classList.remove("holding");
       charImg.src = idleSrc;
+
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
       }
-    
-      // 👉 이번에 추가로 굴린 시간만 서버에 반영
+
       const delta = score - lastSubmittedScore;
-      if (delta > 0.0001) { // 노이즈 방지용 작은 조건
+      if (delta > 0.0001) {
         submitScoreDelta(delta);
         lastSubmittedScore = score;
       }
     }
 
+    holdArea.addEventListener("mousedown", startHolding);
+    document.addEventListener("mouseup", stopHolding);
 
-    function stopHolding() {
-      if (!holding) return;
-      holding = false;
-      gameArea.classList.remove("holding");
-      charImg.src = idleSrc;
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-    }
-
-    // mouse
-    holdArea.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      startHolding();
-    });
-
-    document.addEventListener("mouseup", () => {
-      stopHolding();
-    });
-
-    // touch
-    holdArea.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      startHolding();
-    }, { passive: false });
-
-    holdArea.addEventListener("touchend", (e) => {
-      e.preventDefault();
-      stopHolding();
-    }, { passive: false });
-
-    holdArea.addEventListener("touchcancel", (e) => {
-      e.preventDefault();
-      stopHolding();
-    }, { passive: false });
+    holdArea.addEventListener("touchstart", (e) => { e.preventDefault(); startHolding(); }, { passive: false });
+    holdArea.addEventListener("touchend", (e) => { e.preventDefault(); stopHolding(); }, { passive: false });
+    holdArea.addEventListener("touchcancel", (e) => { e.preventDefault(); stopHolding(); }, { passive: false });
   </script>
 
-  <!-- Leaderboard Bar -->
+  <!-- LEADERBOARD BAR -->
   <div class="leaderboard-bar" id="leaderboard-bar">
     <div class="leaderboard-left">
       <div class="lb-label">Top Country</div>
@@ -424,16 +374,15 @@
     </div>
   </div>
 
-  <!-- Leaderboard Modal -->
+  <!-- LEADERBOARD MODAL -->
   <div class="leaderboard-modal-backdrop" id="leaderboard-modal-backdrop">
     <div class="leaderboard-modal">
       <div class="lb-modal-header">
         <h2>Global Leaderboard</h2>
         <button class="lb-close-btn" id="lb-close-btn">✕</button>
       </div>
-      <div class="lb-modal-subtitle">
-        Total score by country (auto-detected by IP)
-      </div>
+      <div class="lb-modal-subtitle">Total score by country (auto-detected by IP)</div>
+
       <div class="lb-table-wrapper">
         <table class="lb-table">
           <thead>
@@ -443,28 +392,24 @@
               <th>Score</th>
             </tr>
           </thead>
-          <tbody id="lb-table-body">
-            <!-- rows will be injected by JS -->
-          </tbody>
+          <tbody id="lb-table-body"></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- Leaderboard JS -->
+  <!-- LEADERBOARD SCRIPT -->
   <script>
-    // 나라코드 → 이모지 간단 매핑(없으면 지구본)
     const COUNTRY_FLAG_MAP = {
-      "KR": "🇰🇷",
-      "US": "🇺🇸",
-      "JP": "🇯🇵",
-      "CN": "🇨🇳",
-      "GB": "🇬🇧",
-      "FR": "🇫🇷",
-      "DE": "🇩🇪",
-      "AU": "🇦🇺",
-      "CA": "🇨🇦"
-      // 필요하면 추가
+      KR: "🇰🇷",
+      US: "🇺🇸",
+      JP: "🇯🇵",
+      CN: "🇨🇳",
+      GB: "🇬🇧",
+      FR: "🇫🇷",
+      DE: "🇩🇪",
+      AU: "🇦🇺",
+      CA: "🇨🇦",
     };
 
     const bar = document.getElementById("leaderboard-bar");
@@ -480,13 +425,10 @@
     const meCountryEl = document.getElementById("lb-me-country");
     const meScoreEl = document.getElementById("lb-me-score");
 
-    const API_BASE = "https://snowleaderboardapi.kmg24499523.workers.dev";
-    
     let myCountryCode = null;
 
     function formatScore(num) {
       if (num === null || num === undefined) return "0";
-      // 1234567 -> "1,234,567" 형식
       return num.toLocaleString();
     }
 
@@ -511,13 +453,13 @@
         }
 
         if (me) {
-          myCountryCode = me.countryCode || null;
+          myCountryCode = me.countryCode;
           meFlagEl.textContent = flagForCountry(me.countryCode);
-          meCountryEl.textContent = me.countryName || "Unknown";
+          meCountryEl.textContent = me.countryName;
           meScoreEl.textContent = formatScore(me.score);
         }
       } catch (err) {
-        console.error("Failed to fetch summary", err);
+        console.error("summary failed", err);
       }
     }
 
@@ -532,7 +474,9 @@
         list.forEach(row => {
           const tr = document.createElement("tr");
 
-          if (myCountryCode && row.code && row.code.toUpperCase() === myCountryCode.toUpperCase()) {
+          if (myCountryCode &&
+              row.code &&
+              row.code.toUpperCase() === myCountryCode.toUpperCase()) {
             tr.classList.add("lb-row-me");
           }
 
@@ -541,10 +485,11 @@
             <td>${flagForCountry(row.code)} ${row.name}</td>
             <td>${formatScore(row.score)}</td>
           `;
+
           tableBody.appendChild(tr);
         });
       } catch (err) {
-        console.error("Failed to fetch full leaderboard", err);
+        console.error("full leaderboard failed", err);
       }
     }
 
@@ -557,20 +502,15 @@
       modalBackdrop.style.display = "none";
     }
 
-    // 클릭 이벤트
     bar.addEventListener("click", openLeaderboardModal);
     closeBtn.addEventListener("click", closeLeaderboardModal);
     modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) {
-        closeLeaderboardModal();
-      }
+      if (e.target === modalBackdrop) closeLeaderboardModal();
     });
 
-    // 초기 로드 시 summary 한 번 호출
     fetchSummary();
-
-    // 실시간 느낌을 위한 주기적 갱신 (5초마다)
     setInterval(fetchSummary, 5000);
   </script>
+
 </body>
 </html>
