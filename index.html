@@ -138,7 +138,7 @@
 
   <div class="hint">Hold to roll ⛄</div>
 
-  <script>
+    <script>
     const scoreEl = document.getElementById("score");
     const gameArea = document.getElementById("gameArea");
     const holdArea = document.getElementById("holdArea");
@@ -197,6 +197,11 @@
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
+      }
+
+      // ✅ 손 뗀 시점의 점수를 전세계 리더보드에 자동 전송
+      if (typeof autoSubmitScoreFromGame === "function") {
+        autoSubmitScoreFromGame(score);
       }
     }
 
@@ -270,7 +275,7 @@
   </div>
 </section>
 <!-- 👆 여기까지 리더보드 UI -->
-  <script>
+<script>
   // 👇 네 Worker API 주소로 바꿔줘
   const API_BASE = "https://snowleaderboardapi.kmg24499523.workers.dev";
 
@@ -356,6 +361,28 @@
       });
     }
   });
+
+  // ✅ 게임에서 자동으로 불러쓰는 함수
+  function autoSubmitScoreFromGame(finalScore) {
+    const usernameEl = document.getElementById("username-input");
+    const countryEl = document.getElementById("country-input");
+    const statusEl  = document.getElementById("submit-status");
+
+    const username = (usernameEl?.value || "Player").trim();
+    const country  = (countryEl?.value || "WW").trim().toUpperCase();
+
+    // 소수점 한 자리로 깔끔하게
+    const roundedScore = Math.round(finalScore * 10) / 10;
+
+    if (!roundedScore || isNaN(roundedScore)) {
+      console.warn("Score is invalid, not submitting.", roundedScore);
+      return;
+    }
+
+    statusEl.textContent = "Submitting score...";
+
+    submitScore(username, country, roundedScore);
+  }
 </script>
 </body>
 </html>
