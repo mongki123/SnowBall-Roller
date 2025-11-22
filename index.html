@@ -186,7 +186,7 @@
       display:flex;
       justify-content:center;
       align-items:center;
-      overflow: hidden; /* 혹시 넘치면 잘라주기 */
+      overflow: hidden;
     }
 
     /* Modal backdrop */
@@ -369,12 +369,24 @@
       }
     }
 
+    // 🧊 버그 수정: 화면 어디서든 떼면 무조건 stopHolding
     holdArea.addEventListener("mousedown", startHolding);
     document.addEventListener("mouseup", stopHolding);
+    gameArea.addEventListener("mouseleave", stopHolding);
 
-    holdArea.addEventListener("touchstart", (e) => { e.preventDefault(); startHolding(); }, { passive: false });
-    holdArea.addEventListener("touchend", (e) => { e.preventDefault(); stopHolding(); }, { passive: false });
-    holdArea.addEventListener("touchcancel", (e) => { e.preventDefault(); stopHolding(); }, { passive: false });
+    const onTouchStart = (e) => {
+      e.preventDefault();
+      startHolding();
+    };
+
+    const onTouchEnd = (e) => {
+      e.preventDefault();
+      stopHolding();
+    };
+
+    holdArea.addEventListener("touchstart", onTouchStart, { passive: false });
+    document.addEventListener("touchend", onTouchEnd, { passive: false });
+    document.addEventListener("touchcancel", onTouchEnd, { passive: false });
   </script>
 
   <!-- BOTTOM UI: LEADERBOARD + AD -->
