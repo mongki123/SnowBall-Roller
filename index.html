@@ -183,7 +183,7 @@
       color: #4a6fff;
     }
 
-    /* ⬆⬇ 중앙 토글 라벨 */
+    /* ⬆ 중앙 토글 라벨 (고정 표시) */
     .lb-center {
       position: absolute;
       top: 4px;
@@ -542,7 +542,8 @@
 
     function setLeaderboardOpen(open) {
       leaderboardOpen = open;
-      toggleIndicatorEl.textContent = open ? "Leaderboard ⬇️" : "Leaderboard ⬆️";
+      // ⬆️ 고정
+      toggleIndicatorEl.textContent = "Leaderboard ⬆️";
     }
 
     function formatScore(num) {
@@ -622,19 +623,34 @@
       setLeaderboardOpen(false);
     }
 
-    // 데스크탑 / 기본 클릭
+    // 데스크탑 / 기본 클릭으로 열기
     bar.addEventListener("click", openLeaderboardModal);
-
-    // 모바일 터치에서도 확실히 열리게
+    // 모바일 터치로도 열기
     bar.addEventListener("touchstart", (e) => {
       e.preventDefault();
       openLeaderboardModal();
     }, { passive: false });
 
+    // X 버튼으로 닫기 (클릭 + 터치)
     closeBtn.addEventListener("click", closeLeaderboardModal);
+    closeBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      closeLeaderboardModal();
+    }, { passive: false });
+
+    // 바깥(어두운 영역) 터치/클릭 시 닫기
     modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) closeLeaderboardModal();
+      if (e.target === modalBackdrop) {
+        closeLeaderboardModal();
+      }
     });
+
+    modalBackdrop.addEventListener("touchstart", (e) => {
+      if (e.target === modalBackdrop) {
+        e.preventDefault();
+        closeLeaderboardModal();
+      }
+    }, { passive: false });
 
     fetchSummary();
     setInterval(fetchSummary, 5000);
