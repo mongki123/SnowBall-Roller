@@ -315,10 +315,47 @@
       background: #e8f1ff !important;
       font-weight: 600;
     }
+
+    /* ❄ 눈 내리는 레이어 */
+    .snow-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none; /* 클릭 막지 않기 */
+      overflow: hidden;
+      z-index: 0; /* 게임/리더보드보다 뒤에 */
+    }
+
+    .snowflake {
+      position: absolute;
+      top: -10vh;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+      user-select: none;
+      animation-name: snowFall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+
+    @keyframes snowFall {
+      0% {
+        transform: translate3d(0, -10vh, 0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(0, 110vh, 0);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 
 <body>
+  <!-- ❄ 눈 레이어 -->
+  <div class="snow-layer" id="snowLayer"></div>
+
   <h1>Snowball Roller</h1>
 
   <div class="score">
@@ -484,31 +521,7 @@
     (adsbygoogle = window.adsbygoogle || []).push({});
   </script>
 
-  <!-- LEADERBOARD MODAL -->
-  <div class="leaderboard-modal-backdrop" id="leaderboard-modal-backdrop">
-    <div class="leaderboard-modal">
-      <div class="lb-modal-header">
-        <h2>Global Leaderboard</h2>
-        <button class="lb-close-btn" id="lb-close-btn">✕</button>
-      </div>
-      <div class="lb-modal-subtitle">Total score by country (auto-detected by IP)</div>
-
-      <div class="lb-table-wrapper">
-        <table class="lb-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Country</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody id="lb-table-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- LEADERBOARD SCRIPT -->
+  <!-- LEADERBOARD & SNOW SCRIPT -->
   <script>
     const bar = document.getElementById("leaderboard-bar");
     const modalBackdrop = document.getElementById("leaderboard-modal-backdrop");
@@ -652,6 +665,28 @@
 
     fetchSummary();
     setInterval(fetchSummary, 5000);
+
+    // ❄ 눈 내리는 효과 생성
+    const snowLayer = document.getElementById("snowLayer");
+    if (snowLayer) {
+      const SNOW_COUNT = 80;
+      for (let i = 0; i < SNOW_COUNT; i++) {
+        const flake = document.createElement("span");
+        flake.className = "snowflake";
+        flake.textContent = "❄";
+
+        // 랜덤 위치 / 크기 / 속도
+        flake.style.left = Math.random() * 100 + "vw";
+        flake.style.fontSize = (8 + Math.random() * 10) + "px";
+
+        const duration = 8 + Math.random() * 8; // 8~16초
+        const delay = Math.random() * -duration; // 시작 타이밍 랜덤
+        flake.style.animationDuration = duration + "s";
+        flake.style.animationDelay = delay + "s";
+
+        snowLayer.appendChild(flake);
+      }
+    }
   </script>
 
 </body>
