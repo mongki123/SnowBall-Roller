@@ -336,8 +336,11 @@
     .snowflake {
       position: absolute;
       top: -10vh;
-      color: rgba(255, 255, 255, 0.95);
-      text-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+      color: rgba(255, 255, 255, 0.98); /* 거의 순백 */
+      text-shadow:
+        0 0 4px rgba(120, 190, 255, 0.9),   /* 파란 글로우 테두리 */
+        0 0 10px rgba(120, 190, 255, 0.7),  /* 바깥쪽 은은한 파란 빛 */
+        0 0 2px rgba(0, 0, 0, 0.25);        /* 살짝 어두운 안쪽 그림자 */
       user-select: none;
       animation-name: snowFall;
       animation-timing-function: linear;
