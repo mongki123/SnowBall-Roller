@@ -369,6 +369,9 @@
       }
     }
     
+    holdArea.addEventListener("mousedown", startHolding);
+    document.addEventListener("mouseup", stopHolding);
+    
     const onTouchStart = (e) => {
       e.preventDefault();
       startHolding();
