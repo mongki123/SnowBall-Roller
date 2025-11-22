@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Snowball Roller</title>
 
-  <!-- ⭐ AdSense Global Script (나중에 실제 광고 노출 시 그대로 사용) -->
+  <!-- ⭐ AdSense Global Script (실제 광고 사용 시 그대로 사용) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1558880921464207"
       crossorigin="anonymous"></script>
 
@@ -13,15 +13,17 @@
 
     body {
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f4f7ff;
       color: #444;
       user-select: none;
+      /* 🔽 리더보드 + AD 만큼 아래 여유 공간 확보 (겹침 방지) */
+      padding-bottom: 150px;
     }
 
     h1 {
@@ -189,7 +191,7 @@
       overflow: hidden;
     }
 
-    /* 🔳 AD 프레임 (광고를 감싸는 박스) */
+    /* 🔳 AD 프레임 (광고 감싸는 박스, popcat 느낌) */
     .ad-frame {
       width: 100%;
       max-width: 728px;
@@ -298,6 +300,15 @@
       background: #e8f1ff !important;
       font-weight: 600;
     }
+
+    /* (선택) 세로가 너무 낮은 화면에서 조금 더 위로 올리고 싶으면
+    @media (max-height: 700px) {
+      body {
+        justify-content: flex-start;
+        padding-top: 20px;
+      }
+    }
+    */
   </style>
 </head>
 
@@ -401,7 +412,7 @@
       }
     }
 
-    // 화면 어디서든 "떼는 순간"만 멈추게
+    // 화면 어디서든 "떼는 순간" 멈추게
     holdArea.addEventListener("mousedown", startHolding);
     document.addEventListener("mouseup", stopHolding);
 
@@ -443,7 +454,7 @@
       </div>
     </div>
 
-    <!-- AD FRAME + 실제 AdSense 코드 (광고는 그대로, 박스로 감싸기) -->
+    <!-- AD FRAME + 실제 AdSense 코드 (광고는 그대로, 프레임으로 감싸기) -->
     <div class="ad-slot">
       <div class="ad-frame">
         <div class="ad-label">AD</div>
