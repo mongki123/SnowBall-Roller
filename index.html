@@ -183,7 +183,7 @@
       color: #4a6fff;
     }
 
-    /* ⬆ 중앙 토글 라벨 (고정 표시) */
+    /* ⬆ 중앙 라벨 (고정 표시) */
     .lb-center {
       position: absolute;
       top: 4px;
@@ -510,18 +510,6 @@
 
   <!-- LEADERBOARD SCRIPT -->
   <script>
-    const COUNTRY_FLAG_MAP = {
-      KR: "🇰🇷",
-      US: "🇺🇸",
-      JP: "🇯🇵",
-      CN: "🇨🇳",
-      GB: "🇬🇧",
-      FR: "🇫🇷",
-      DE: "🇩🇪",
-      AU: "🇦🇺",
-      CA: "🇨🇦",
-    };
-
     const bar = document.getElementById("leaderboard-bar");
     const modalBackdrop = document.getElementById("leaderboard-modal-backdrop");
     const closeBtn = document.getElementById("lb-close-btn");
@@ -542,7 +530,7 @@
 
     function setLeaderboardOpen(open) {
       leaderboardOpen = open;
-      // ⬆️ 고정
+      // ⬆️ 텍스트 고정
       toggleIndicatorEl.textContent = "Leaderboard ⬆️";
     }
 
@@ -551,9 +539,15 @@
       return num.toLocaleString();
     }
 
+    // 🌍 전세계 모든 국가코드를 국기 이모지로 변환
     function flagForCountry(code) {
       if (!code) return "🌎";
-      return COUNTRY_FLAG_MAP[code.toUpperCase()] || "🌎";
+      const upper = String(code).toUpperCase();
+      if (!/^[A-Z]{2}$/.test(upper)) return "🌎";
+
+      const first = upper.codePointAt(0) - 65 + 0x1F1E6;
+      const second = upper.codePointAt(1) - 65 + 0x1F1E6;
+      return String.fromCodePoint(first, second);
     }
 
     async function fetchSummary() {
