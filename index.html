@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Snowball Roller</title>
 
-  <!-- ⭐ AdSense Global Script (네가 준 그대로) -->
+  <!-- ⭐ AdSense Global Script (나중에 실제 광고 노출 시 그대로 사용) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1558880921464207"
       crossorigin="anonymous"></script>
 
@@ -189,6 +189,38 @@
       overflow: hidden;
     }
 
+    /* 🔳 AD 프레임 (광고를 감싸는 박스) */
+    .ad-frame {
+      width: 100%;
+      max-width: 728px;
+      border-radius: 18px;
+      padding: 6px 10px 10px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      border: 1px solid #dfe6ff;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .ad-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.28em;
+      color: #9aa4c6;
+      font-weight: 600;
+    }
+
+    .ad-inner {
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow: hidden;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f7f9ff, #ebf1ff);
+    }
+
     /* Modal backdrop */
     .leaderboard-modal-backdrop {
       position: fixed;
@@ -368,10 +400,11 @@
         lastSubmittedScore = score;
       }
     }
-    
+
+    // 화면 어디서든 "떼는 순간"만 멈추게
     holdArea.addEventListener("mousedown", startHolding);
     document.addEventListener("mouseup", stopHolding);
-    
+
     const onTouchStart = (e) => {
       e.preventDefault();
       startHolding();
@@ -410,19 +443,25 @@
       </div>
     </div>
 
-    <!-- Ad Slot (리더보드 바로 아래 광고) -->
+    <!-- AD FRAME + 실제 AdSense 코드 (광고는 그대로, 박스로 감싸기) -->
     <div class="ad-slot">
-      <!-- ⭐ 네가 받은 AdSense 광고 단위 코드 그대로 삽입 -->
-      <!-- ad_1 -->
-      <ins class="adsbygoogle"
-          style="display:inline-block;width:728px;height:90px"
-          data-ad-client="ca-pub-1558880921464207"
-          data-ad-slot="7716111592"></ins>
-      <script>
-          (adsbygoogle = window.adsbygoogle || []).push({});
-      </script>
+      <div class="ad-frame">
+        <div class="ad-label">AD</div>
+        <div class="ad-inner">
+          <!-- ad_1 -->
+          <ins class="adsbygoogle"
+               style="display:inline-block;width:728px;height:90px"
+               data-ad-client="ca-pub-1558880921464207"
+               data-ad-slot="7716111592"></ins>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- AdSense init script (광고 초기화) -->
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
 
   <!-- LEADERBOARD MODAL -->
   <div class="leaderboard-modal-backdrop" id="leaderboard-modal-backdrop">
