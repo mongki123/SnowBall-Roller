@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Snowball Roller</title>
 
-  <!-- ⭐ AdSense Global Script (실제 광고 사용 시 그대로 사용) -->
+  <!-- ⭐ AdSense Global Script -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1558880921464207"
       crossorigin="anonymous"></script>
 
@@ -22,19 +22,24 @@
       background: #f4f7ff;
       color: #444;
       user-select: none;
-      /* 🔽 리더보드 + AD 만큼 아래 여유 공간 확보 (겹침 방지) */
-      padding-bottom: 150px;
+      padding-bottom: 150px; /* 리더보드 + AD 공간 */
+      position: relative;
+      overflow-x: hidden;
     }
 
     h1 {
       margin: 0 0 10px;
       font-size: 30px;
       letter-spacing: 0.03em;
+      position: relative;
+      z-index: 1;
     }
 
     .score {
       font-size: 22px;
       margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
     }
 
     .score span {
@@ -44,6 +49,7 @@
 
     .game-area {
       position: relative;
+      z-index: 1;
       width: min(500px, 95vw);
       height: min(500px, 95vw);
       border-radius: 26px;
@@ -97,6 +103,8 @@
       margin-top: 14px;
       font-size: 14px;
       color: #666;
+      position: relative;
+      z-index: 1;
     }
 
     /* floating +0.1 */
@@ -206,7 +214,7 @@
       overflow: hidden;
     }
 
-    /* 🔳 AD 프레임 (광고 감싸는 박스, popcat 느낌) */
+    /* 🔳 AD 프레임 */
     .ad-frame {
       width: 100%;
       max-width: 728px;
@@ -320,15 +328,15 @@
     .snow-layer {
       position: fixed;
       inset: 0;
-      pointer-events: none; /* 클릭 막지 않기 */
+      pointer-events: none;
       overflow: hidden;
-      z-index: 0; /* 게임/리더보드보다 뒤에 */
+      z-index: 0; /* 배경 위, 게임/텍스트 아래 */
     }
 
     .snowflake {
       position: absolute;
       top: -10vh;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.95);
       text-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
       user-select: none;
       animation-name: snowFall;
@@ -501,7 +509,7 @@
       </div>
     </div>
 
-    <!-- AD FRAME + 실제 AdSense 코드 (광고는 그대로, 프레임으로 감싸기) -->
+    <!-- AD FRAME -->
     <div class="ad-slot">
       <div class="ad-frame">
         <div class="ad-label">AD</div>
@@ -521,6 +529,30 @@
     (adsbygoogle = window.adsbygoogle || []).push({});
   </script>
 
+  <!-- LEADERBOARD MODAL -->
+  <div class="leaderboard-modal-backdrop" id="leaderboard-modal-backdrop">
+    <div class="leaderboard-modal">
+      <div class="lb-modal-header">
+        <h2>Global Leaderboard</h2>
+        <button class="lb-close-btn" id="lb-close-btn">✕</button>
+      </div>
+      <div class="lb-modal-subtitle">Total score by country (auto-detected by IP)</div>
+
+      <div class="lb-table-wrapper">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Country</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="lb-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- LEADERBOARD & SNOW SCRIPT -->
   <script>
     const bar = document.getElementById("leaderboard-bar");
@@ -539,13 +571,6 @@
     const toggleIndicatorEl = document.getElementById("lb-toggle-indicator");
 
     let myCountryCode = null;
-    let leaderboardOpen = false;
-
-    function setLeaderboardOpen(open) {
-      leaderboardOpen = open;
-      // ⬆️ 텍스트 고정
-      toggleIndicatorEl.textContent = "Leaderboard ⬆️";
-    }
 
     function formatScore(num) {
       if (num === null || num === undefined) return "0";
@@ -624,44 +649,49 @@
     }
 
     function openLeaderboardModal() {
+      if (!modalBackdrop) return;
       modalBackdrop.style.display = "flex";
-      setLeaderboardOpen(true);
       fetchFullLeaderboard();
     }
 
     function closeLeaderboardModal() {
+      if (!modalBackdrop) return;
       modalBackdrop.style.display = "none";
-      setLeaderboardOpen(false);
     }
 
     // 데스크탑 / 기본 클릭으로 열기
-    bar.addEventListener("click", openLeaderboardModal);
-    // 모바일 터치로도 열기
-    bar.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      openLeaderboardModal();
-    }, { passive: false });
+    if (bar) {
+      bar.addEventListener("click", openLeaderboardModal);
+      bar.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        openLeaderboardModal();
+      }, { passive: false });
+    }
 
     // X 버튼으로 닫기 (클릭 + 터치)
-    closeBtn.addEventListener("click", closeLeaderboardModal);
-    closeBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      closeLeaderboardModal();
-    }, { passive: false });
-
-    // 바깥(어두운 영역) 터치/클릭 시 닫기
-    modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) {
-        closeLeaderboardModal();
-      }
-    });
-
-    modalBackdrop.addEventListener("touchstart", (e) => {
-      if (e.target === modalBackdrop) {
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeLeaderboardModal);
+      closeBtn.addEventListener("touchstart", (e) => {
         e.preventDefault();
         closeLeaderboardModal();
-      }
-    }, { passive: false });
+      }, { passive: false });
+    }
+
+    // 바깥(어두운 영역) 터치/클릭 시 닫기
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener("click", (e) => {
+        if (e.target === modalBackdrop) {
+          closeLeaderboardModal();
+        }
+      });
+
+      modalBackdrop.addEventListener("touchstart", (e) => {
+        if (e.target === modalBackdrop) {
+          e.preventDefault();
+          closeLeaderboardModal();
+        }
+      }, { passive: false });
+    }
 
     fetchSummary();
     setInterval(fetchSummary, 5000);
@@ -675,12 +705,11 @@
         flake.className = "snowflake";
         flake.textContent = "❄";
 
-        // 랜덤 위치 / 크기 / 속도
         flake.style.left = Math.random() * 100 + "vw";
         flake.style.fontSize = (8 + Math.random() * 10) + "px";
 
         const duration = 8 + Math.random() * 8; // 8~16초
-        const delay = Math.random() * -duration; // 시작 타이밍 랜덤
+        const delay = Math.random() * -duration;
         flake.style.animationDuration = duration + "s";
         flake.style.animationDelay = delay + "s";
 
