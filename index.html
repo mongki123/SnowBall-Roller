@@ -368,12 +368,7 @@
         lastSubmittedScore = score;
       }
     }
-
-    // 🧊 버그 수정: 화면 어디서든 떼면 무조건 stopHolding
-    holdArea.addEventListener("mousedown", startHolding);
-    document.addEventListener("mouseup", stopHolding);
-    gameArea.addEventListener("mouseleave", stopHolding);
-
+    
     const onTouchStart = (e) => {
       e.preventDefault();
       startHolding();
