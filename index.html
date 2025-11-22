@@ -543,6 +543,10 @@
     function flagForCountry(code) {
       if (!code) return "🌎";
       const upper = String(code).toUpperCase();
+
+      // 특별 코드: Worldwide
+      if (upper === "WW") return "🌎";
+
       if (!/^[A-Z]{2}$/.test(upper)) return "🌎";
 
       const first = upper.codePointAt(0) - 65 + 0x1F1E6;
