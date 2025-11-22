@@ -132,13 +132,14 @@
 
     /* Leaderboard bottom bar */
     .leaderboard-bar {
+      position: relative;
       width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: stretch;
       background: rgba(255, 255, 255, 0.9);
       border-radius: 999px;
-      padding: 10px 16px;
+      padding: 16px 16px 10px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
       cursor: pointer;
       backdrop-filter: blur(12px);
@@ -180,6 +181,20 @@
       font-size: 14px;
       font-weight: 700;
       color: #4a6fff;
+    }
+
+    /* ⬆⬇ 중앙 토글 라벨 */
+    .lb-center {
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9aa4c6;
+      font-weight: 600;
+      pointer-events: none;
     }
 
     /* Ad slot under leaderboard */
@@ -300,15 +315,6 @@
       background: #e8f1ff !important;
       font-weight: 600;
     }
-
-    /* (선택) 세로가 너무 낮은 화면에서 조금 더 위로 올리고 싶으면
-    @media (max-height: 700px) {
-      body {
-        justify-content: flex-start;
-        padding-top: 20px;
-      }
-    }
-    */
   </style>
 </head>
 
@@ -435,6 +441,10 @@
   <div class="bottom-ui">
     <!-- Leaderboard Bar -->
     <div class="leaderboard-bar" id="leaderboard-bar">
+      <div class="lb-center">
+        <span id="lb-toggle-indicator">Leaderboard ⬆️</span>
+      </div>
+
       <div class="leaderboard-left">
         <div class="lb-label">Top Country</div>
         <div class="lb-main">
@@ -525,7 +535,15 @@
     const meCountryEl = document.getElementById("lb-me-country");
     const meScoreEl = document.getElementById("lb-me-score");
 
+    const toggleIndicatorEl = document.getElementById("lb-toggle-indicator");
+
     let myCountryCode = null;
+    let leaderboardOpen = false;
+
+    function setLeaderboardOpen(open) {
+      leaderboardOpen = open;
+      toggleIndicatorEl.textContent = open ? "Leaderboard ⬇️" : "Leaderboard ⬆️";
+    }
 
     function formatScore(num) {
       if (num === null || num === undefined) return "0";
@@ -595,14 +613,24 @@
 
     function openLeaderboardModal() {
       modalBackdrop.style.display = "flex";
+      setLeaderboardOpen(true);
       fetchFullLeaderboard();
     }
 
     function closeLeaderboardModal() {
       modalBackdrop.style.display = "none";
+      setLeaderboardOpen(false);
     }
 
+    // 데스크탑 / 기본 클릭
     bar.addEventListener("click", openLeaderboardModal);
+
+    // 모바일 터치에서도 확실히 열리게
+    bar.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      openLeaderboardModal();
+    }, { passive: false });
+
     closeBtn.addEventListener("click", closeLeaderboardModal);
     modalBackdrop.addEventListener("click", (e) => {
       if (e.target === modalBackdrop) closeLeaderboardModal();
